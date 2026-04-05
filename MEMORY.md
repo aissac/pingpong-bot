@@ -484,3 +484,73 @@ NotebookLM recommendations for HFT bot:
 - **Disk:** 30GB EBS
 - **Region:** eu-central-1 (Frankfurt)
 - **IP:** 63.179.252.138
+
+---
+
+## Session 2026-04-04: DYNAMIC POSITION SIZING IMPLEMENTATION
+
+### The Problem
+**LEG2 was using fixed $100 capital instead of matching LEG1 shares.**
+
+This caused:
+- Unequal shares → not delta neutral
+- Bad hedges when combined > 95¢
+- Guaranteed losses when combined > 100¢
+
+### Example Bad Hedges (Before Fix)
+
+| Market | LEG1 | LEG2 | Combined | Result |
+|--------|------|------|----------|--------|
+| BTC-15M | NO @ 40¢, 250 shares | YES @ 78¢, 128 shares | 118¢ | -$18 loss |
+| BTC-15M | NO @ 55¢, 182 shares | YES @ 78¢, 128 shares | 133¢ | -$9 loss |
+
+### The Solution: Equal Shares, Dynamic Capital
+
+**Formula:**
+```rust
+// LEG1: Fixed capital
+let leg1_shares = LEG1_CAPITAL / leg1_price;  // e.g., $100 / 0.40 = 250 shares
+
+// LEG2: Match shares, dynamic capital
+let leg2_shares = leg1_shares;  // 250 shares (same as LEG1)
+let leg2_capital = leg2_shares * leg2_price;  // 250 * 0.78 = $195
+```
+
+**Polymarket Math:**
+- 1 YES share + 1 NO share = $1.00 (at resolution)
+- Equal shares = delta neutral (no directional risk)
+
+### Decision Logic for LEG2
+
+| Combined Cost | Action | Reason |
+|---------------|--------|--------|
+| ≤ 95¢ | Execute LEG2 | Guaranteed 5¢+ profit |
+| 95¢ - 100¢ | Execute LEG2 | Small loss, but frees capital |
+| > 100¢ | DON'T buy LEG2 | Guaranteed loss on both sides |
+| > 100¢ + stop-loss | SELL LEG1 | Stop-loss, don't hedge |
+
+### When Combined > 100¢
+
+**Why NOT buy more LEG2 shares?**
+
+Example: LEG1 NO @ 40¢, LEG2 YES @ 78¢ (combined 118¢)
+- If you buy 250 NO + 320 YES:
+  - YES wins: $320 - ($100 + $249.60) = -$29.60
+  - NO wins: $250 - ($100 + $249.60) = -$99.60
+- **Both sides lose!**
+
+**Correct action:** Sell LEG1 to stop-loss, don't buy LEG2.
+
+### Code Changes
+
+1. **PriceState struct** - Added `leg1_shares: Option<f64>`
+2. **log_trade function** - Now logs shares and capital
+3. **LEG1 execution** - Calculate and store shares
+4. **LEG2 execution** - Match shares, calculate dynamic capital
+5. **Hedge decision** - Three-way logic (good/acceptable/abort)
+
+### File Updated
+- `src/bin/arb_bot.rs` - Dynamic position sizing
+
+### GitHub Commit
+- Pending (build errors being fixed)
