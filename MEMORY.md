@@ -661,3 +661,44 @@ fn build_unsubscribe_message(tokens: &[String]) -> serde_json::Value
 
 ### GitHub Commit
 - `event-driven` - Event-driven architecture (Bug 1-5 fixes)
+
+---
+
+## Session 2026-04-05: EVENT-DRIVEN BOT WORKING (MAJOR BREAKTHROUGH)
+
+### The Achievement
+**WebSocket + REST event-driven architecture fully functional.**
+
+Market discovery now happens via WebSocket events instead of polling.
+
+### How It Works
+
+1. **WebSocket receives market objects** with `slug`, `question`, `market` (conditionId)
+2. **Filter for crypto updown** markets (`slug.contains("updown") || slug.contains("up-or-down")`)
+3. **REST fetch for tokens** - Query `/markets?slug=<slug>` to get `clobTokenIds`
+4. **Dynamic subscribe** - Subscribe to tokens via same WS connection
+5. **Price updates begin** - WS starts sending `price_change` events
+
+### What's Working
+
+```
+📊 Slug: hype-updown-5m-1775467800 (lower: hype-updown-5m-1775467800)
+📊 Crypto market detected: hype-updown-5m-1775467800
+📡 Fetching: https://gamma-api.polymarket.com/markets?slug=hype-updown-5m-1775467800
+📡 REST response received
+📡 JSON parsed
+✅ FETCHED hype-updown-5m-1775467800 [5m] YES:881309530752181839508347866536 NO:918810388260818996174097886801
+📡 Subscribed to 2 tokens
+```
+
+### Known Issues
+
+- **Brand new markets** may return empty array from REST (not indexed yet)
+- Solution: Retry after 30s or use conditionId endpoint
+
+### Files Modified
+
+- `src/bin/arb_bot.rs` - Event-driven discovery, REST token fetch
+
+### GitHub Commit
+- `709b20f` - feat: event-driven market discovery with REST token fetch
