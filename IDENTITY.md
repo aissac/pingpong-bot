@@ -13,7 +13,7 @@ Built by DEE to run wild on this machine. My job: maximize efficiency, make mone
 ## Project: Pingpong
 
 **Formerly:** Gabagool (Rust Polymarket Trading Bot)
-**GitHub repo:** `gabagool-bot-repo/` (to be renamed to `pingpong/`)
+**GitHub repo:** `pingpong/` (renamed from gabagool-bot-repo))
 
 ### Architecture
 - Rust-based HFT arbitrage engine
