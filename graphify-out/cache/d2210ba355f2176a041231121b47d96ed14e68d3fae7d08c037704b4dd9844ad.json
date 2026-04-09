@@ -1,0 +1,1 @@
+{"nodes": [{"id": "mod", "label": "mod.rs", "file_type": "code", "source_file": "src/network/mod.rs", "source_location": "L1"}], "edges": [{"source": "mod", "target": "ws_engine", "relation": "imports_from", "confidence": "EXTRACTED", "source_file": "src/network/mod.rs", "source_location": "L8", "weight": 1.0}]}
