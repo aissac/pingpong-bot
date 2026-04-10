@@ -1,7 +1,7 @@
 # Graph Report - /home/aissac/.openclaw/workspace  (2026-04-10)
 
 ## Corpus Check
-- 172 files · ~142,472 words
+- 172 files · ~142,557 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
